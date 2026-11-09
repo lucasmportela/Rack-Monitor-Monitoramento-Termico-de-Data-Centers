@@ -24,7 +24,7 @@ Relatório térmico feito com o resultado da leitura dos registros de temperatur
 ![Relatório](docs/screenshots/tela-relatorio.png)
 
 ### Alerta
-Alerta exibido quando alguma temperatura de algum rack ultrapassar 75°C
+Alerta exibido quando alguma temperatura de algum rack atingir 75 °C ou mais.
 ![Alerta](docs/screenshots/tela-alerta.png)
 
 ## Tecnologias
@@ -40,7 +40,9 @@ Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 ├── backend/
 │   ├── DOCKERFILE
 │   ├── package.json
-│   └── server.js
+│   ├── server.js
+│   └── tests/
+│       └── monitoramento.test.js
 ├── frontend/
 │   ├── DOCKERFILE
 │   ├── index.html
@@ -171,6 +173,26 @@ Exemplo de requisição:
 ```
 
 A resposta contém a matriz validada, as médias por rack, a maior temperatura, a localização do sensor mais quente, o indicador de alerta e uma mensagem.
+
+## Testes automatizados
+
+Os testes de integração utilizam o módulo nativo `node:test` e fazem requisições HTTP à API real, sem precisar instalar bibliotecas de teste adicionais.
+
+Na pasta do backend, instale as dependências e execute:
+
+```bash
+npm install
+npm test
+```
+
+A suíte cobre:
+
+- Rota de status da API (`GET /`).
+- Processamento da matriz de 3 racks com 3 sensores.
+- Cálculo das médias e identificação do sensor mais quente.
+- Limites válidos de temperatura (10 °C e 90 °C).
+- Alerta abaixo, exatamente em e acima do limite de 75 °C.
+- Rejeição de matrizes, racks e temperaturas inválidas.
 
 ## Teste rápido da API
 

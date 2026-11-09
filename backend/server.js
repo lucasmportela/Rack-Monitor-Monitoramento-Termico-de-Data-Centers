@@ -106,7 +106,11 @@ app.post("/api/monitoramento", (req, res) => {
     });
 });
 
-// Inicialização do servidor
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+// Permite importar a aplicação nos testes sem abrir uma porta automaticamente.
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando na porta ${PORT}`);
+    });
+}
+
+module.exports = app;
