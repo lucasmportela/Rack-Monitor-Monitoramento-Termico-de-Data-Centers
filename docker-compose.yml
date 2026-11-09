@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: DOCKERFILE
+      dockerfile: Dockerfile
     container_name: thermal-backend
     restart: unless-stopped
     environment:
@@ -13,7 +13,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: DOCKERFILE
+      dockerfile: Dockerfile
     container_name: thermal-frontend
     restart: unless-stopped
     ports:

@@ -16,7 +16,7 @@ Aplicação web para simular o monitoramento térmico de três racks de servidor
 ## Demonstração Visual
 
 ### Tela Inicial (Vazia)
-Aguardando o registro dos valores de temperatura dos sensores dos rack para o monitoramento dos racks para informar a maior temperatura.
+Tela inicial para acompanhar os sensores dos três racks e iniciar o monitoramento das temperaturas.
 ![Tela Inicial](docs/screenshots/tela-inicial.png)
 
 ### Relatório
@@ -38,13 +38,13 @@ Alerta exibido quando alguma temperatura de algum rack atingir 75 °C ou mais.
 ```text
 Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 ├── backend/
-│   ├── DOCKERFILE
+│   ├── Dockerfile
 │   ├── package.json
 │   ├── server.js
 │   └── tests/
 │       └── monitoramento.test.js
 ├── frontend/
-│   ├── DOCKERFILE
+│   ├── Dockerfile
 │   ├── index.html
 │   ├── nginx.conf
 │   ├── package.json
@@ -72,7 +72,7 @@ Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 
 ### Pré-requisitos
 
-- Node.js e npm instalados.
+- Node.js 20 ou superior e npm instalados.
 - Git instalado.
 
 ### 1. Clone o repositório e entre na pasta do projeto
@@ -185,7 +185,7 @@ npm install
 npm test
 ```
 
-A suíte cobre:
+A suíte cobre **17 cenários**, incluindo:
 
 - Rota de status da API (`GET /`).
 - Processamento da matriz de 3 racks com 3 sensores.
@@ -193,18 +193,26 @@ A suíte cobre:
 - Limites válidos de temperatura (10 °C e 90 °C).
 - Alerta abaixo, exatamente em e acima do limite de 75 °C.
 - Rejeição de matrizes, racks e temperaturas inválidas.
+- Rejeição de corpos JSON nulos ou malformados e de campos ausentes.
 
 ## Teste rápido da API
 
 Com o backend em execução, envie:
 
 ```bash
-curl -X POST http://localhost:3001/api/monitoramento ^
-  -H "Content-Type: application/json" ^
-  -d "{\"matriz\":[[25,30,35],[40,45,50],[60,70,78.5]]}"
+curl -X POST http://localhost:3001/api/monitoramento \
+  -H "Content-Type: application/json" \
+  -d '{"matriz":[[25,30,35],[40,45,50],[60,70,78.5]]}'
 ```
 
-No PowerShell, se preferir, use `Invoke-RestMethod` ou uma ferramenta como Postman/Insomnia.
+**Windows PowerShell:**
+
+```powershell
+$body = '{"matriz":[[25,30,35],[40,45,50],[60,70,78.5]]}'
+Invoke-RestMethod -Uri "http://localhost:3001/api/monitoramento" -Method Post -ContentType "application/json" -Body $body
+```
+
+Também é possível testar a API com Postman ou Insomnia.
 
 ## Melhorias futuras
 
