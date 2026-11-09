@@ -66,7 +66,6 @@ $env:CORS_ORIGINS = "https://app.seu-dominio.com"
 export CORS_ORIGINS="https://app.seu-dominio.com"
 ```
 
-Para Docker Compose, copie `.env.example` para `.env` na raiz do projeto e ajuste o valor de `CORS_ORIGINS`.
 
 ## Estrutura do projeto
 
@@ -229,6 +228,7 @@ A suíte cobre **21 cenários**, incluindo:
 - Alerta abaixo, exatamente em e acima do limite de 75 °C.
 - Rejeição de matrizes, racks e temperaturas inválidas.
 - Rejeição de corpos JSON nulos ou malformados e de campos ausentes.
+- CORS: origens locais autorizadas, origens externas não autorizadas e requisições preflight.
 
 ## Teste rápido da API
 
