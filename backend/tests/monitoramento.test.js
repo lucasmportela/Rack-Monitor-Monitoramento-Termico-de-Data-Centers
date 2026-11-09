@@ -199,3 +199,15 @@ test("rejeita temperatura nula", async () => {
     assert.equal(response.status, 400);
     assert.match(body.erro, /Rack 1, Sensor 0/);
 });
+
+test("rejeita corpo JSON nulo sem causar erro interno", async () => {
+    const response = await fetch(apiUrl + "/api/monitoramento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "null"
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.erro, "A matriz deve possuir exatamente 3 racks.");
+});

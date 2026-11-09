@@ -17,7 +17,9 @@ app.get("/", (req, res) => {
 
 // Recebe e processa as temperaturas
 app.post("/api/monitoramento", (req, res) => {
-    const { matriz } = req.body;
+    const matriz = req.body && typeof req.body === "object"
+        ? req.body.matriz
+        : undefined;
 
     // Validação da estrutura
     if (
