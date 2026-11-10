@@ -29,7 +29,7 @@ Alerta exibido quando alguma temperatura de algum rack atingir 75 °C ou mais.
 
 ## Tecnologias
 
-**Frontend:** React, Vite, JavaScript, CSS e Lucide React.  
+**Frontend:** React, Vite, JavaScript, CSS, Lucide React, Vitest e Testing Library.  
 **Backend:** Node.js, Express e CORS.  
 **Infraestrutura:** Docker, Docker Compose e Nginx.
 
@@ -109,8 +109,11 @@ Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 │   ├── vite.config.js
 │   └── src/
 │       ├── App.jsx
+│       ├── App.test.jsx
 │       ├── main.jsx
-│       └── style.css
+│       ├── style.css
+│       └── test/
+│           └── setup.js
 ├── .dockerignore
 ├── .gitignore
 ├── docker-compose.yml
@@ -243,7 +246,7 @@ npm install
 npm test
 ```
 
-A suíte cobre **24 cenários**, incluindo:
+A suíte de integração do backend cobre **24 cenários**, incluindo:
 
 - Rota de status da API (`GET /`).
 - Processamento da matriz de 3 racks com 3 sensores.
@@ -254,6 +257,17 @@ A suíte cobre **24 cenários**, incluindo:
 - Rejeição de corpos JSON nulos ou malformados e de campos ausentes.
 - CORS: origens locais autorizadas, origens externas não autorizadas e requisições preflight.
 - Segurança HTTP: cabeçalhos de proteção, limite de corpo JSON e rate limiting por IP.
+
+O frontend possui **5 testes de interface** com Vitest, React Testing Library e `user-event`. Eles verificam a renderização dos nove sensores, validação de temperatura, restauração do formulário, envio e exibição de alertas, além do tratamento de falhas de conexão. As duas suítes totalizam **29 cenários automatizados**.
+
+Para executar os testes de interface, na pasta `frontend`:
+
+```bash
+npm install
+npm test
+```
+
+O GitHub Actions executa os testes da API, os testes de interface e o build de produção do React em cada push e pull request direcionado à branch `main`.
 
 ## Teste rápido da API
 
