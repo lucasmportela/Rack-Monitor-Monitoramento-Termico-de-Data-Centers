@@ -35,7 +35,7 @@ jobs:
         run: npm test
 
   frontend:
-    name: Build React
+    name: Testes e build React
     runs-on: ubuntu-latest
 
     steps:
@@ -50,6 +50,10 @@ jobs:
       - name: Instalar dependências
         working-directory: frontend
         run: npm install --no-audit --no-fund
+
+      - name: Executar testes de interface
+        working-directory: frontend
+        run: npm test
 
       - name: Gerar build
         working-directory: frontend
