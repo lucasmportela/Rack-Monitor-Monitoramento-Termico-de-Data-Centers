@@ -43,13 +43,19 @@ async function requisitarJson(payload) {
     };
 }
 
-test("GET / informa que a API está online", async () => {
+test("GET / informa que a API está online e /api/health responde ao health check", async () => {
     const response = await fetch(apiUrl + "/");
     const body = await response.json();
 
     assert.equal(response.status, 200);
     assert.equal(body.status, "ONLINE");
     assert.equal(body.mensagem, "API Rack Monitor funcionando!");
+
+    const health = await fetch(apiUrl + "/api/health");
+    const healthBody = await health.json();
+
+    assert.equal(health.status, 200);
+    assert.equal(healthBody.status, "ok");
 });
 
 test("processa uma matriz 3x3 e calcula as médias de cada rack", async () => {

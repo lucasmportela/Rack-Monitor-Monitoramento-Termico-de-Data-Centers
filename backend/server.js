@@ -1,8 +1,13 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
+const FRONTEND_DIST = path.resolve(__dirname, process.env.FRONTEND_DIST || "public");
+const SERVE_FRONTEND = process.env.NODE_ENV === "production"
+    && fs.existsSync(path.join(FRONTEND_DIST, "index.html"));
 
 app.disable("x-powered-by");
 app.set("trust proxy", process.env.TRUST_PROXY === "1" ? 1 : false);
@@ -100,13 +105,21 @@ app.use("/api/monitoramento", (req, res, next) => {
 
 app.use(express.json({ limit: "10kb" }));
 
-// Rota inicial da API
-app.get("/", (req, res) => {
-    res.json({
-        mensagem: "API Rack Monitor funcionando!",
-        status: "ONLINE"
-    });
+// Health check independente da interface, utilizado pela hospedagem.
+app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
 });
+
+// Em desenvolvimento, a raiz continua identificando a API.
+// Na imagem de produção, a raiz é servida pelo frontend React.
+if (!SERVE_FRONTEND) {
+    app.get("/", (req, res) => {
+        res.json({
+            mensagem: "API Rack Monitor funcionando!",
+            status: "ONLINE"
+        });
+    });
+}
 
 // Recebe e processa as temperaturas
 app.post("/api/monitoramento", (req, res) => {
@@ -200,6 +213,23 @@ app.post("/api/monitoramento", (req, res) => {
             : "Nenhum superaquecimento detectado."
     });
 });
+
+// Na implantação unificada, Express também entrega o build React.
+if (SERVE_FRONTEND) {
+    app.use(express.static(FRONTEND_DIST));
+    app.use((req, res, next) => {
+        if (req.method === "GET" && !req.path.startsWith("/api/")) {
+            return res.sendFile(
+                path.join(FRONTEND_DIST, "index.html"),
+                (error) => {
+                    if (error) next(error);
+                }
+            );
+        }
+
+        next();
+    });
+}
 
 // Padroniza erros de parsing do JSON para manter respostas da API em JSON.
 app.use((error, req, res, next) => {

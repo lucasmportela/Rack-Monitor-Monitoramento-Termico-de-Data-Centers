@@ -58,3 +58,15 @@ jobs:
       - name: Gerar build
         working-directory: frontend
         run: npm run build
+
+  docker:
+    name: Build da imagem Docker de demonstração
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Construir a imagem usada pelo Render
+        run: docker build --tag rack-monitor-demo .

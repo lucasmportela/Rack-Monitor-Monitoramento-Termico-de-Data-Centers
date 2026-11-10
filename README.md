@@ -31,7 +31,22 @@ Alerta exibido quando alguma temperatura de algum rack atingir 75 °C ou mais.
 
 **Frontend:** React, Vite, JavaScript, CSS, Lucide React, Vitest e Testing Library.  
 **Backend:** Node.js, Express e CORS.  
-**Infraestrutura:** Docker, Docker Compose e Nginx.
+**Infraestrutura:** Docker, Docker Compose, Nginx e Render.
+
+## Demonstração online
+
+O projeto está preparado para publicação no Render por meio do Blueprint `render.yaml`. A implantação utiliza uma única aplicação Docker: o Express entrega o build do React e também processa as requisições da API, mantendo a interface e a API na mesma origem.
+
+Para publicar:
+
+1. Entre no [Render](https://render.com/) usando sua conta.
+2. Abra **New → Blueprint** e selecione este repositório do GitHub.
+3. Revise o serviço `rack-monitor-demo` definido em `render.yaml` e aplique o Blueprint.
+4. Aguarde a conclusão do build e do health check. O Render fornecerá o endereço público `onrender.com`.
+
+O deploy automático está condicionado à aprovação das verificações do GitHub Actions. O serviço usa o plano gratuito do Render: após 15 minutos sem tráfego, ele pode entrar em suspensão; a primeira visita seguinte pode levar cerca de um minuto para reativá-lo. O sistema não mantém histórico nem armazena as leituras enviadas: os valores são processados em memória apenas para gerar o relatório da sessão. Esta é uma demonstração educacional, não um serviço de monitoramento de produção e não está conectada a sensores físicos.
+
+A URL pública será incluída aqui e no README principal do perfil depois que o primeiro deploy estiver concluído e validado.
 
 ## Configuração de CORS
 
@@ -116,6 +131,8 @@ Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 │           └── setup.js
 ├── .dockerignore
 ├── .gitignore
+├── Dockerfile
+├── render.yaml
 ├── docker-compose.yml
 └── README.md
 ```
@@ -213,9 +230,13 @@ docker compose down
 
 ## API
 
+### `GET /api/health`
+
+Retorna o estado da API e é utilizado pelo health check da hospedagem.
+
 ### `GET /`
 
-Retorna uma mensagem indicando que a API está online.
+Quando o backend é executado localmente sem o build de produção do frontend, retorna uma mensagem indicando que a API está online. Na implantação hospedada, a raiz serve a interface React.
 
 ### `POST /api/monitoramento`
 
