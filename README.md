@@ -68,7 +68,7 @@ O alerta é exibido quando pelo menos um sensor registra temperatura igual ou su
 
 Cada envio válido é registrado com data e hora, matriz de temperaturas, médias por rack, maior leitura, localização do sensor e status de alerta. A interface apresenta os 20 registros mais recentes e permite reabrir um relatório.
 
-- **Demonstração pública:** o serviço Render utiliza PostgreSQL gerenciado pelo Neon, conectado por `DATABASE_URL`. As medições são gravadas na tabela `rack_monitor_history`, e o histórico permanece disponível após reinicializações e novos deploys do serviço. A resposta de `/api/historico` informa `tipo: "PostgreSQL"` e `persistente: true` quando esse armazenamento está ativo.
+- **Demonstração pública:** o serviço Render utiliza PostgreSQL gerenciado pelo Neon, conectado por `DATABASE_URL`. As medições são gravadas na tabela `rack_monitor_history`, e o histórico permanece disponível após reinicializações da aplicação. A resposta de `/api/historico` informa `tipo: "PostgreSQL"` e `persistente: true` quando esse armazenamento está ativo.
 
 ### Validação após reinicialização
 
