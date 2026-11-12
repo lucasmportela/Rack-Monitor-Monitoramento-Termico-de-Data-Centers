@@ -21,6 +21,7 @@ COPY backend/package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 
 COPY backend/server.js ./server.js
+COPY backend/history-store.js ./history-store.js
 COPY --from=frontend-build /app/frontend/dist ./public
 
 EXPOSE 10000
