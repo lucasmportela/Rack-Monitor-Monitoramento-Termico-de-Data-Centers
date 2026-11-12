@@ -55,7 +55,8 @@ O alerta é exibido quando pelo menos um sensor registra temperatura igual ou su
 | Frontend | React 19, Vite, JavaScript, CSS e Lucide React |
 | Backend | Node.js, Express e CORS |
 | Testes | Node.js Test Runner, Vitest, React Testing Library e user-event |
-| Persistência | PostgreSQL gerenciado pelo Neon na demonstração pública; JSON local no desenvolvimento |\n| Infraestrutura | Docker, Docker Compose, Nginx, GitHub Actions e Render |
+| Persistência | PostgreSQL gerenciado pelo Neon na demonstração pública; JSON local no desenvolvimento |
+| Infraestrutura | Docker, Docker Compose, Nginx, GitHub Actions e Render |
 
 ## Arquitetura
 
