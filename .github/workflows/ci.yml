@@ -70,3 +70,26 @@ jobs:
 
       - name: Construir a imagem usada pelo Render
         run: docker build --tag rack-monitor-demo .
+
+      - name: Iniciar contêiner e validar /api/health
+        run: |
+          docker run --detach --name rack-monitor-ci --publish 10000:10000 rack-monitor-demo
+
+          for tentativa in $(seq 1 30); do
+            if resposta=$(curl --fail --silent http://127.0.0.1:10000/api/health) &&
+               echo "$resposta" | grep -q '"status":"ok"'; then
+              echo "Health check aprovado: $resposta"
+              exit 0
+            fi
+
+            echo "Aguardando a API iniciar... tentativa $tentativa/30"
+            sleep 2
+          done
+
+          echo "A API não respondeu corretamente em /api/health."
+          docker logs rack-monitor-ci
+          exit 1
+
+      - name: Remover contêiner de teste
+        if: always()
+        run: docker rm --force rack-monitor-ci || true
