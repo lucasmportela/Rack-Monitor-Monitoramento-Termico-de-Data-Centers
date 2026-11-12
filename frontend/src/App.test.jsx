@@ -84,7 +84,7 @@ describe("Rack Monitor - interface", () => {
     await user.click(screen.getByRole("button", { name: /Analisar temperaturas/i }));
 
     expect(await screen.findByRole("heading", { name: "Relatório térmico" })).toBeInTheDocument();
-    expect(screen.getByText("Rack 3, Sensor 3", { exact: false })).toBeInTheDocument();
+    expect(screen.getAllByText("Rack 3, Sensor 3", { exact: false })).toHaveLength(2);
     expect(screen.getByText("Atenção: superaquecimento")).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith("/api/monitoramento", expect.objectContaining({
       method: "POST",
