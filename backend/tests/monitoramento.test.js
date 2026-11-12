@@ -1,11 +1,20 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+
+const historyFile = path.join(os.tmpdir(), `rack-monitor-history-${process.pid}.json`);
+delete process.env.DATABASE_URL;
+process.env.HISTORY_FILE = historyFile;
+
 const app = require("../server");
 
 let server;
 let apiUrl;
 
 before(async () => {
+    await fs.rm(historyFile, { force: true });
     await new Promise((resolve) => {
         server = app.listen(0, "127.0.0.1", resolve);
     });
@@ -14,16 +23,16 @@ before(async () => {
 });
 
 after(async () => {
-    if (!server) return;
-
-    await new Promise((resolve, reject) => {
-        server.close((error) => {
-            if (error) return reject(error);
-            resolve();
+    if (server) {
+        await new Promise((resolve, reject) => {
+            server.close((error) => {
+                if (error) return reject(error);
+                resolve();
+            });
+            server.closeAllConnections();
         });
-
-        server.closeAllConnections();
-    });
+    }
+    await fs.rm(historyFile, { force: true });
 });
 
 function criarMatriz(temperatura = 20) {
@@ -345,4 +354,33 @@ test("limita requisições por IP e retorna 429 ao exceder o limite", async () =
         config.windowMs = windowOriginal;
         app.locals.rateLimitStore.clear();
     }
+});
+
+
+test("salva leituras válidas e disponibiliza os registros no histórico", async () => {
+    const matriz = criarMatriz(42.5);
+    const { response, body } = await requisitarJson({ matriz });
+    assert.equal(response.status, 200);
+    assert.equal(body.historico.maiorTemperatura, 42.5);
+    assert.ok(body.historico.id);
+    assert.equal(body.persistencia.tipo, "arquivo local");
+    assert.equal(body.persistencia.persistente, true);
+
+    const historyResponse = await fetch(apiUrl + "/api/historico");
+    const historyBody = await historyResponse.json();
+    assert.equal(historyResponse.status, 200);
+    assert.equal(historyBody.itens[0].id, body.historico.id);
+    assert.deepEqual(historyBody.itens[0].matriz, matriz);
+});
+
+test("GET /api/historico respeita o limite e ordena os registros recentes", async () => {
+    for (const temperatura of [31, 32, 33]) {
+        const { response } = await requisitarJson({ matriz: criarMatriz(temperatura) });
+        assert.equal(response.status, 200);
+    }
+    const response = await fetch(apiUrl + "/api/historico?limit=2");
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.itens.length, 2);
+    assert.deepEqual(body.itens.map((item) => item.maiorTemperatura), [33, 32]);
 });

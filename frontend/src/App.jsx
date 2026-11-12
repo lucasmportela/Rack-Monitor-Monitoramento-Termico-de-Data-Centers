@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
   CheckCircle2,
   Cpu,
   Gauge,
+  History,
+  RefreshCw,
   RotateCcw,
   Send,
   Thermometer,
@@ -12,6 +14,7 @@ import {
 import "./style.css";
 
 const API_URL = "/api/monitoramento";
+const HISTORY_URL = "/api/historico?limit=20";
 
 const INITIAL_MATRIX = [
   [25, 28, 30],
@@ -30,6 +33,28 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState("");
+  const [historyPersistence, setHistoryPersistence] = useState(null);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      const response = await fetch(HISTORY_URL);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.erro || "Não foi possível carregar o histórico.");
+      setHistory(data.itens || []);
+      setHistoryPersistence(data.persistencia || null);
+    } catch (requestError) {
+      setHistoryError(requestError.message || "Não foi possível carregar o histórico.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
 
   const totalSensors = temperatures.flat().length;
   const filledSensors = temperatures
@@ -104,6 +129,10 @@ export default function App() {
       }
 
       setResult(data);
+      if (data.historico) {
+        setHistory((current) => [data.historico, ...current.filter((item) => item.id !== data.historico.id)].slice(0, 20));
+      }
+      if (data.persistencia) setHistoryPersistence(data.persistencia);
     } catch (requestError) {
       setError(
         requestError.message ||
@@ -112,6 +141,17 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openHistoryRecord(record) {
+    setTemperatures(record.matriz.map((rack) => rack.map(String)));
+    setResult({ ...record, sucesso: true });
+    setError("");
+  }
+
+  function formatHistoryDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Data indisponível" : date.toLocaleString("pt-BR");
   }
 
   const criticalTemperature = result?.maiorTemperatura ?? 0;
@@ -345,6 +385,43 @@ export default function App() {
             </div>
           </section>
         )}
+
+        <section className="history-section" aria-labelledby="history-heading">
+          <div className="section-title">
+            <div>
+              <span className="tag">REGISTROS SALVOS</span>
+              <h2 id="history-heading">Histórico recente</h2>
+              <p className="history-description">Consulte e reabra as últimas análises realizadas.</p>
+            </div>
+            <button className="btn-secondary history-refresh" type="button" onClick={loadHistory} disabled={historyLoading}>
+              <RefreshCw size={16} />
+              {historyLoading ? "Atualizando..." : "Atualizar"}
+            </button>
+          </div>
+
+          {historyPersistence?.aviso && <div className="storage-notice" role="status">{historyPersistence.aviso}</div>}
+          {historyError && <div className="error-message" role="alert"><History size={18} />{historyError}</div>}
+          {historyLoading ? (
+            <p className="history-empty">Carregando histórico...</p>
+          ) : history.length === 0 ? (
+            <p className="history-empty">Nenhuma análise registrada ainda. Envie as temperaturas para criar o primeiro registro.</p>
+          ) : (
+            <div className="history-list">
+              {history.map((item) => (
+                <article className="history-item" key={item.id}>
+                  <div className="history-item-details">
+                    <span className="history-date">{formatHistoryDate(item.registradoEm)}</span>
+                    <strong className={item.alerta ? "danger" : "normal"}>Máxima: {formatTemperature(item.maiorTemperatura)}</strong>
+                    <small>Rack {(item.localizacao?.rack ?? 0) + 1}, Sensor {(item.localizacao?.sensor ?? 0) + 1}</small>
+                  </div>
+                  <span className={`history-badge ${item.alerta ? "critical" : "normal"}`}>{item.alerta ? "Alerta" : "Normal"}</span>
+                  <button className="btn-secondary history-open" type="button" onClick={() => openHistoryRecord(item)}>Ver relatório</button>
+                </article>
+              ))}
+            </div>
+          )}
+          {historyPersistence && <p className="storage-status">Armazenamento: {historyPersistence.tipo}{historyPersistence.persistente ? " · persistente" : " · temporário"}</p>}
+        </section>
       </main>
 
       <footer>

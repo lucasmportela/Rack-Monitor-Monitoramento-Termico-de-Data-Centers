@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("node:fs");
 const path = require("node:path");
+const { listarHistorico, salvarHistorico, obterInfoPersistencia } = require("./history-store");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -110,6 +111,19 @@ app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
 });
 
+app.get("/api/historico", async (req, res) => {
+    const solicitado = Number.parseInt(req.query.limit, 10);
+    const limite = Number.isFinite(solicitado) ? Math.min(100, Math.max(1, solicitado)) : 20;
+
+    try {
+        const itens = await listarHistorico(limite);
+        return res.json({ itens, persistencia: obterInfoPersistencia() });
+    } catch (error) {
+        console.error("Falha ao consultar histórico:", error.message);
+        return res.status(503).json({ erro: "Não foi possível consultar o histórico no momento." });
+    }
+});
+
 // Em desenvolvimento, a raiz continua identificando a API.
 // Na imagem de produção, a raiz é servida pelo frontend React.
 if (!SERVE_FRONTEND) {
@@ -122,7 +136,7 @@ if (!SERVE_FRONTEND) {
 }
 
 // Recebe e processa as temperaturas
-app.post("/api/monitoramento", (req, res) => {
+app.post("/api/monitoramento", async (req, res) => {
     const matriz = req.body && typeof req.body === "object"
         ? req.body.matriz
         : undefined;
@@ -197,21 +211,25 @@ app.post("/api/monitoramento", (req, res) => {
         );
     }
 
-    // Retorna os resultados para o React
-    res.json({
+    const resultado = {
         sucesso: true,
         matriz: Matriz,
         medias: TempMediaLista,
         maiorTemperatura: Maior,
-        localizacao: {
-            rack: coordenadai,
-            sensor: coordenadaj
-        },
+        localizacao: { rack: coordenadai, sensor: coordenadaj },
         alerta: condicao,
         mensagem: condicao
             ? "ALERTA: Ponto Crítico de Sobreaquecimento Detectado"
             : "Nenhum superaquecimento detectado."
-    });
+    };
+
+    try {
+        const historico = await salvarHistorico(resultado);
+        return res.json({ ...resultado, historico, persistencia: obterInfoPersistencia() });
+    } catch (error) {
+        console.error("Falha ao salvar histórico:", error.message);
+        return res.status(503).json({ erro: "Não foi possível salvar esta análise no histórico. Tente novamente." });
+    }
 });
 
 // Na implantação unificada, Express também entrega o build React.

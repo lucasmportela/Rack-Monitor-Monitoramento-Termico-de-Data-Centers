@@ -540,3 +540,24 @@ body{background:#eef3f8;color:var(--text);font-family:Inter,"Segoe UI",Arial,san
 .btn-secondary{background:#fff;color:#176b9b;border:1px solid #c9dce8!important}
 .results{padding:22px;border:1px solid var(--border);border-radius:14px;background:#fff}
 @media(max-width:800px){.topbar{padding:16px 20px}.container{padding:22px 14px}.overview,.racks-grid{grid-template-columns:1fr}.welcome{align-items:flex-start;flex-direction:column}}
+
+
+/* Histórico de análises */
+.history-section{margin-top:30px;padding:22px;border:1px solid var(--border);border-radius:14px;background:#fff;box-shadow:0 5px 18px #234c6a08}
+.history-section .section-title{gap:16px}
+.history-description{margin-top:8px;color:var(--muted);font-size:13px}
+.history-refresh,.history-open{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.history-refresh:disabled{opacity:.6;cursor:wait}
+.history-list{display:grid;gap:10px}
+.history-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:18px;padding:15px 16px;border:1px solid var(--border);border-radius:10px;background:#f8fbfd}
+.history-item-details{display:grid;gap:6px}
+.history-date,.history-item small,.storage-status{color:var(--muted);font-size:11px}
+.history-item-details strong{font-size:14px}
+.history-badge{padding:7px 11px;border-radius:20px;font-size:11px;font-weight:700}
+.history-badge.critical{color:#a92f2f;background:#fff0f0}
+.history-badge.normal{color:#1c7652;background:#eaf8f0}
+.history-open{padding:9px 13px;font-size:11px}
+.history-empty{padding:22px;border:1px dashed var(--border);border-radius:10px;color:var(--muted);font-size:13px;text-align:center}
+.storage-notice{margin-bottom:15px;padding:12px 14px;border:1px solid #e6d5a4;border-radius:8px;background:#fff9e9;color:#755b1d;font-size:12px;line-height:1.5}
+.storage-status{display:block;margin-top:14px}
+@media(max-width:650px){.history-section{padding:16px}.history-section .section-title{align-items:flex-start;flex-direction:column}.history-item{grid-template-columns:1fr;align-items:flex-start}.history-open{width:100%}}

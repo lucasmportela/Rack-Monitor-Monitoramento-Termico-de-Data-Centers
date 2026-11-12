@@ -17,8 +17,16 @@ function respostaJson(dados, ok = true) {
   return { ok, json: async () => dados };
 }
 
+const HISTORY_URL = "/api/historico?limit=20";
+const historicoVazio = {
+  itens: [],
+  persistencia: { tipo: "arquivo local", persistente: true, aviso: null },
+};
+
 beforeEach(() => {
-  vi.stubGlobal("fetch", vi.fn());
+  vi.stubGlobal("fetch", vi.fn((url) =>
+    url === HISTORY_URL ? Promise.resolve(respostaJson(historicoVazio)) : Promise.resolve(respostaJson({}))
+  ));
 });
 
 afterEach(() => {
@@ -66,7 +74,11 @@ describe("Rack Monitor - interface", () => {
 
   it("envia as temperaturas e apresenta o relatório de superaquecimento", async () => {
     const user = userEvent.setup();
-    fetch.mockResolvedValueOnce(respostaJson(resultadoNormal));
+    const registro = { ...resultadoNormal, id: "registro-1", registradoEm: "2026-11-12T12:00:00.000Z" };
+    fetch.mockImplementation((url) => url === HISTORY_URL
+      ? Promise.resolve(respostaJson(historicoVazio))
+      : Promise.resolve(respostaJson({ ...resultadoNormal, historico: registro, persistencia: historicoVazio.persistencia }))
+    );
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: /Analisar temperaturas/i }));
@@ -82,7 +94,10 @@ describe("Rack Monitor - interface", () => {
 
   it("exibe uma mensagem quando a API não está disponível", async () => {
     const user = userEvent.setup();
-    fetch.mockRejectedValueOnce(new Error("Servidor indisponível"));
+    fetch.mockImplementation((url) => url === HISTORY_URL
+      ? Promise.resolve(respostaJson(historicoVazio))
+      : Promise.reject(new Error("Servidor indisponível"))
+    );
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: /Analisar temperaturas/i }));
@@ -92,3 +107,18 @@ describe("Rack Monitor - interface", () => {
     });
   });
 });
+
+
+  it("carrega o histórico e permite reabrir um relatório anterior", async () => {
+    const user = userEvent.setup();
+    const registro = { ...resultadoNormal, id: "historico-1", registradoEm: "2026-11-12T12:00:00.000Z" };
+    fetch.mockImplementation((url) => url === HISTORY_URL
+      ? Promise.resolve(respostaJson({ itens: [registro], persistencia: historicoVazio.persistencia }))
+      : Promise.resolve(respostaJson({}))
+    );
+    render(<App />);
+    expect(await screen.findByText(/Máxima: 78\.0 °C/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Ver relatório/i }));
+    expect(screen.getByRole("heading", { name: "Relatório térmico" })).toBeInTheDocument();
+    expect(screen.getAllByRole("spinbutton")[0]).toHaveValue(25);
+  });

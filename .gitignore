@@ -17,3 +17,6 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+
+# Histórico local do Rack Monitor
+backend/data/

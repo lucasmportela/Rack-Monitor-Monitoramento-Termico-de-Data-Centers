@@ -13,7 +13,7 @@ Aplicação web para simular o monitoramento térmico de **3 racks de servidores
 
 A demonstração está hospedada no **Render (plano gratuito)**. Como o serviço pode entrar em suspensão após um período sem acessos, a primeira abertura depois da inatividade pode levar um pouco mais de tempo.
 
-> **Importante:** este projeto é uma demonstração educacional. As temperaturas são informadas manualmente, não há conexão com sensores físicos e as leituras não são armazenadas como histórico. Não utilize dados de infraestrutura real.
+> **Importante:** este projeto é uma demonstração educacional. As temperaturas são informadas manualmente e não há conexão com sensores físicos. Não utilize dados de infraestrutura real.
 
 ## Funcionalidades
 
@@ -22,8 +22,9 @@ A demonstração está hospedada no **Render (plano gratuito)**. Como o serviço
 - Cálculo da temperatura média de cada rack.
 - Identificação da maior temperatura e da localização do sensor (rack e sensor).
 - Alerta de superaquecimento quando uma leitura é **igual ou superior a 75 °C**.
-- Painel com os sensores e relatório térmico dos resultados.
-- API REST para validar e processar a matriz de temperaturas.
+- Painel com os sensores, relatório térmico e histórico das análises recentes.
+- Consulta das últimas 20 análises, com opção de reabrir relatórios anteriores.
+- API REST para validar, processar e registrar a matriz de temperaturas.
 - Proteção básica da API com limite de requisições, limite de corpo JSON e cabeçalhos HTTP de segurança.
 - Execução local com Vite ou em containers com Docker Compose.
 
@@ -61,6 +62,18 @@ O alerta é exibido quando pelo menos um sensor registra temperatura igual ou su
 - **Desenvolvimento local:** o Vite serve a interface React e encaminha as chamadas `/api` para o servidor Express.
 - **Docker Compose:** frontend e backend executam em containers separados. O Nginx serve a interface e encaminha as chamadas da API.
 - **Render:** uma imagem Docker de produção compila o frontend e o copia para o backend. O Express entrega os arquivos React e atende a API na mesma origem.
+- **Histórico:** PostgreSQL quando `DATABASE_URL` está configurada; arquivo JSON local para desenvolvimento sem banco externo.
+
+## Histórico de análises
+
+Cada envio válido é registrado com data e hora, matriz de temperaturas, médias por rack, maior leitura, localização do sensor e status de alerta. A interface apresenta os 20 registros mais recentes e permite reabrir um relatório.
+
+- **Produção:** configure `DATABASE_URL` no ambiente do serviço com a URL de conexão de um PostgreSQL (por exemplo, Neon). O histórico fica no banco e sobrevive a reinicializações e novos deploys.
+- **Desenvolvimento local:** sem `DATABASE_URL`, os registros são gravados em `backend/data/history.json`, arquivo ignorado pelo Git.
+- **Limite:** a aplicação conserva os 100 registros mais recentes por padrão. Ajuste com `HISTORY_MAX_RECORDS` (de 1 a 500).
+- **Atenção ao Render Free:** sem banco externo, o sistema de arquivos do serviço é temporário e o histórico pode ser perdido em reinicializações, suspensão ou novo deploy. A API informa quando esse modo temporário está ativo.
+
+Para usar PostgreSQL localmente, defina `DATABASE_URL` antes de iniciar o backend. A tabela `rack_monitor_history` é criada automaticamente na primeira consulta ou gravação.
 
 ## Regras de negócio
 
@@ -168,7 +181,11 @@ Resposta:
 
 ### `POST /api/monitoramento`
 
-Recebe uma matriz com 3 racks e 3 temperaturas em cada rack.
+Recebe uma matriz com 3 racks e 3 temperaturas em cada rack, calcula o relatório e registra a análise no histórico.
+
+### `GET /api/historico?limit=20`
+
+Retorna os registros mais recentes (limite entre 1 e 100), incluindo data/hora, matriz, médias, maior temperatura, localização e alerta. A resposta também informa o tipo de armazenamento e se ele é persistente no ambiente atual.
 
 Exemplo de requisição:
 
@@ -231,10 +248,10 @@ Para múltiplas origens, separe os endereços por vírgula. Em produção, a int
 
 ## Testes automatizados
 
-O projeto possui **29 cenários automatizados**:
+O projeto possui **32 cenários automatizados**:
 
-- **24 testes de integração do backend:** rotas de status e health check, processamento da matriz, cálculo de médias, identificação da maior temperatura, validações, CORS, cabeçalhos de segurança, limite do corpo JSON e rate limiting.
-- **5 testes do frontend:** renderização dos nove sensores, validação dos campos, restauração dos valores, envio e exibição do relatório, e tratamento de falha de conexão.
+- **26 testes de integração do backend:** rotas de status, health check e histórico, processamento da matriz, cálculo de médias, validações, persistência e consulta dos registros, CORS, cabeçalhos de segurança, limite do corpo JSON e rate limiting.
+- **6 testes do frontend:** renderização dos sensores, validação, restauração, envio e exibição do relatório, tratamento de falha de conexão e reabertura de registros do histórico.
 
 ### Testar o backend
 
@@ -274,6 +291,7 @@ Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── server.js
+│   ├── history-store.js
 │   └── tests/
 │       └── monitoramento.test.js
 ├── frontend/
@@ -305,7 +323,6 @@ Rack-Monitor-Monitoramento-Termico-de-Data-Centers/
 ## Melhorias futuras
 
 - Integração com sensores físicos ou fontes reais de telemetria.
-- Persistência do histórico de temperaturas em banco de dados.
 - Atualização automática das leituras.
 - Gráficos históricos e notificações de incidentes.
 - Autenticação e gerenciamento de usuários.
