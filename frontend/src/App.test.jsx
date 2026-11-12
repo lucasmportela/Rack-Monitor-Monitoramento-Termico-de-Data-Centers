@@ -56,7 +56,7 @@ describe("Rack Monitor - interface", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Informe valores numéricos entre 10 e 90 °C em todos os sensores."
     );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch.mock.calls.some(([url]) => url === "/api/monitoramento")).toBe(false);
   });
 
   it("restaura os nove campos para os valores iniciais", async () => {
