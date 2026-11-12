@@ -11,7 +11,7 @@ Aplicação web para simular o monitoramento térmico de **3 racks de servidores
 
 <https://rack-monitor-demo.onrender.com>
 
-A demonstração está hospedada no **Render (plano gratuito)**. Como o serviço pode entrar em suspensão após um período sem acessos, a primeira abertura depois da inatividade pode levar um pouco mais de tempo.
+A demonstração está hospedada no **Render (plano gratuito)** e utiliza **PostgreSQL gerenciado pelo Neon** para armazenar o histórico. A conexão é configurada pela variável de ambiente `DATABASE_URL`; nenhuma credencial do banco é armazenada no repositório. Como o serviço pode entrar em suspensão após um período sem acessos, a primeira abertura depois da inatividade pode levar um pouco mais de tempo.
 
 > **Importante:** este projeto é uma demonstração educacional. As temperaturas são informadas manualmente e não há conexão com sensores físicos. Não utilize dados de infraestrutura real.
 
@@ -55,7 +55,7 @@ O alerta é exibido quando pelo menos um sensor registra temperatura igual ou su
 | Frontend | React 19, Vite, JavaScript, CSS e Lucide React |
 | Backend | Node.js, Express e CORS |
 | Testes | Node.js Test Runner, Vitest, React Testing Library e user-event |
-| Infraestrutura | Docker, Docker Compose, Nginx, GitHub Actions e Render |
+| Persistência | PostgreSQL gerenciado pelo Neon na demonstração pública; JSON local no desenvolvimento |\n| Infraestrutura | Docker, Docker Compose, Nginx, GitHub Actions e Render |
 
 ## Arquitetura
 
@@ -68,7 +68,7 @@ O alerta é exibido quando pelo menos um sensor registra temperatura igual ou su
 
 Cada envio válido é registrado com data e hora, matriz de temperaturas, médias por rack, maior leitura, localização do sensor e status de alerta. A interface apresenta os 20 registros mais recentes e permite reabrir um relatório.
 
-- **Produção:** configure `DATABASE_URL` no ambiente do serviço com a URL de conexão de um PostgreSQL (por exemplo, Neon). O histórico fica no banco e sobrevive a reinicializações e novos deploys.
+- **Demonstração pública:** o serviço Render utiliza PostgreSQL gerenciado pelo Neon, conectado por `DATABASE_URL`. As medições são gravadas na tabela `rack_monitor_history`, e o histórico permanece disponível após reinicializações e novos deploys do serviço. A resposta de `/api/historico` informa `tipo: "PostgreSQL"` e `persistente: true` quando esse armazenamento está ativo.
 - **Desenvolvimento local:** sem `DATABASE_URL`, os registros são gravados em `backend/data/history.json`, arquivo ignorado pelo Git.
 - **Limite:** a aplicação conserva os 100 registros mais recentes por padrão. Ajuste com `HISTORY_MAX_RECORDS` (de 1 a 500).
 - **Atenção ao Render Free:** sem banco externo, o sistema de arquivos do serviço é temporário e o histórico pode ser perdido em reinicializações, suspensão ou novo deploy. A API informa quando esse modo temporário está ativo.
