@@ -69,6 +69,17 @@ O alerta é exibido quando pelo menos um sensor registra temperatura igual ou su
 Cada envio válido é registrado com data e hora, matriz de temperaturas, médias por rack, maior leitura, localização do sensor e status de alerta. A interface apresenta os 20 registros mais recentes e permite reabrir um relatório.
 
 - **Demonstração pública:** o serviço Render utiliza PostgreSQL gerenciado pelo Neon, conectado por `DATABASE_URL`. As medições são gravadas na tabela `rack_monitor_history`, e o histórico permanece disponível após reinicializações e novos deploys do serviço. A resposta de `/api/historico` informa `tipo: "PostgreSQL"` e `persistente: true` quando esse armazenamento está ativo.
+
+### Validação após reinicialização
+
+Em **12 de novembro de 2026**, a demonstração foi submetida a um teste prático de persistência:
+
+1. Duas medições já estavam registradas no histórico do PostgreSQL do Neon.
+2. O serviço da aplicação foi reiniciado manualmente no Render.
+3. Após o serviço voltar ao estado ativo, a rota `GET /api/historico` continuou apresentando as duas medições anteriores.
+4. Uma consulta SQL diretamente ao banco confirmou que os registros permaneciam armazenados.
+
+**Resultado:** o histórico foi preservado após a reinicialização da aplicação. Esse teste valida a persistência entre reinicializações do serviço; não representa, por si só, um teste separado de restauração ou recuperação de desastre do banco.
 - **Desenvolvimento local:** sem `DATABASE_URL`, os registros são gravados em `backend/data/history.json`, arquivo ignorado pelo Git.
 - **Limite:** a aplicação conserva os 100 registros mais recentes por padrão. Ajuste com `HISTORY_MAX_RECORDS` (de 1 a 500).
 - **Atenção ao Render Free:** sem banco externo, o sistema de arquivos do serviço é temporário e o histórico pode ser perdido em reinicializações, suspensão ou novo deploy. A API informa quando esse modo temporário está ativo.
