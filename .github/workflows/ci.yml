@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Configurar Node.js
         uses: actions/setup-node@v7
@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Configurar Node.js
         uses: actions/setup-node@v7
@@ -66,7 +66,7 @@ jobs:
 
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Construir a imagem usada pelo Render
         run: docker build --tag rack-monitor-demo .
